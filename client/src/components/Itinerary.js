@@ -7,6 +7,8 @@ import CardActions from "@material-ui/core/CardActions";
 import Collapse from "@material-ui/core/Collapse";
 import IconButton from "@material-ui/core/IconButton";
 import Avatar from "@material-ui/core/Avatar";
+import FavouriteIcon from "@material-ui/icons/Favorite";
+import FavouriteBorderIcon from "@material-ui/icons/FavoriteBorder";
 import Activity from "./Activity";
 import Comments from "./Comments";
 import { connect } from "react-redux";
@@ -17,6 +19,11 @@ import {
   deleteComment
 } from "../actions/commentActions";
 import { Link } from "react-router-dom";
+import {
+  setItineraryRating,
+  setItineraryLikes
+} from "../actions/itineraryActions";
+import { addFavourite, deleteFavourite } from "../actions/authActions";
 
 const styles = theme => ({
   card: {
@@ -50,21 +57,64 @@ class Itinerary extends Component {
     }
   };
 
+  onClickAdd() {
+    const date = new Date();
+    const newFavourite = {
+      itineraryId: this.props.itinerary._id,
+      timestamp: date
+    };
+    const newLikes = this.props.itinerary.likes + 1;
+
+    var userId = this.props.user._id || this.props.user.id;
+
+    this.props.addFavourite(newFavourite, userId);
+    this.props.setItineraryLikes(newLikes, this.props.itinerary._id);
+  }
+
   render() {
     const { classes } = this.props;
     const itinerary = this.props.itinerary;
+    var isFavourite = false;
+
+    if (this.props.auth.favourites) {
+      isFavourite = this.props.auth.favourites.find(
+        favourite => favourite.itineraryId === itinerary._id
+      );
+    }
 
     return (
       <div className="itinerary-card">
         <Card className={classes.card}>
           <CardContent className="card-summary">
             <div className="profile-pic-container">
-              {/* <Avatar alt="User logo" src={require("../images/" + itinerary.user + ".png")} className={classes.bigAvatar} /> */}
+              {/* <Avatar alt="User logo" className={classes.bigAvatar} /> */}
               <p>{itinerary.user}</p>
             </div>
 
             <div className="itinerary-title-details">
               <h4>{itinerary.title}</h4>
+
+              <div>
+                {this.props.auth.isAuthenticated ? (
+                  <div>
+                    {isFavourite ? (
+                      <IconButton
+                        aria-label="Favourite"
+                        onClick={this.handleClickOpenDel}
+                      >
+                        <FavouriteIcon className="fav-icon" />
+                      </IconButton>
+                    ) : (
+                      <IconButton
+                        aria-label="Favourite"
+                        onClick={this.onClickAdd}
+                      >
+                        <FavouriteBorderIcon />
+                      </IconButton>
+                    )}
+                  </div>
+                ) : null}
+              </div>
               <div className="itinerary-detail-preview">
                 <span>Rating: {itinerary.rating} </span>
                 <span>{itinerary.duration} hours</span>
@@ -126,27 +176,55 @@ class Itinerary extends Component {
 }
 
 Itinerary.propTypes = {
-  classes: PropTypes.object.isRequired,
   itinerary: PropTypes.object,
   loading: PropTypes.bool,
-  getActivities: PropTypes.func,
-  activities: PropTypes.object,
   isOpen: PropTypes.bool,
   toggle: PropTypes.func,
   getComments: PropTypes.func,
   comments: PropTypes.object,
   addComment: PropTypes.func,
   deleteComment: PropTypes.func,
-  user: PropTypes.object
+  user: PropTypes.object,
+  getFavourites: PropTypes.func,
+  favourites: PropTypes.object,
+  addFavourite: PropTypes.func,
+  deleteFavourite: PropTypes.func,
+  auth: PropTypes.object,
+  setItineraryRating: PropTypes.func,
+  setItineraryLikes: PropTypes.func
 };
+// Itinerary.propTypes = {
+//   classes: PropTypes.object.isRequired,
+//   itinerary: PropTypes.object,
+//   loading: PropTypes.bool,
+//   getActivities: PropTypes.func,
+//   activities: PropTypes.object,
+//   isOpen: PropTypes.bool,
+//   toggle: PropTypes.func,
+//   getComments: PropTypes.func,
+//   comments: PropTypes.object,
+//   addComment: PropTypes.func,
+//   deleteComment: PropTypes.func,
+//   user: PropTypes.object
+// };
 
 const mapStateToProps = state => ({
   activities: state.activities,
   comments: state.comments,
+  auth: state.auth,
   user: state.auth.user
 });
 
 export default connect(
   mapStateToProps,
-  { getActivities, getComments, addComment, deleteComment }
+  {
+    getActivities,
+    getComments,
+    addComment,
+    deleteComment,
+    addFavourite,
+    deleteFavourite,
+    setItineraryRating,
+    setItineraryLikes
+  }
 )(withStyles(styles)(Itinerary));

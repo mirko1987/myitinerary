@@ -4,6 +4,7 @@ const User = require("../../models/User");
 const bcrypt = require("bcryptjs");
 const config = require("config");
 const jwt = require("jsonwebtoken");
+const auth = require("../../middleware/auth");
 
 const multer = require("multer");
 
@@ -65,7 +66,8 @@ router.post("/", upload.single("userImage"), (req, res) => {
       first_name,
       last_name,
       country,
-      userImage
+      userImage,
+      facebookID
     });
 
     // Create salt and hash
@@ -88,7 +90,10 @@ router.post("/", upload.single("userImage"), (req, res) => {
                   email: user.email,
                   first_name: user.first_name,
                   last_name: user.last_name,
-                  country: user.country
+                  country: user.country,
+                  facebookID: req.body.facebookID,
+                  favourites: user.favourites,
+                  userImage: userImage
                 }
               });
             }
@@ -99,4 +104,40 @@ router.post("/", upload.single("userImage"), (req, res) => {
   });
 });
 
+// UPDATE USER /api/users/:userId
+router.put("/:userId", (req, res) => {
+  const updatedUser = {
+    username: req.body.username,
+    email: req.body.email,
+    first_name: req.body.first_name,
+    last_name: req.body.last_name,
+    country: req.body.country
+  };
+  User.findOneAndUpdate({ _id: req.params.userId }, updatedUser)
+    .then(user => res.json({ success: true }))
+    .catch(() => res.status(404).json({ success: false }));
+});
+// Add favourite
+router.put("/:userId/favourites", (req, res) => {
+  const newFavourite = {
+    itineraryId: req.body.itineraryId,
+    timestamp: req.body.timestamp
+  };
+  User.findOneAndUpdate(
+    { _id: req.params.userId },
+    { $push: { favourites: newFavourite } }
+  )
+    .then(user => res.send(newFavourite))
+    .catch(() => res.status(404).json({ success: false }));
+});
+
+// Delete favourite
+router.delete("/:userId/favourites/:itineraryId", auth, (req, res) => {
+  User.findOneAndUpdate(
+    { _id: req.params.userId },
+    { $pull: { favourites: { itineraryId: req.params.itineraryId } } }
+  )
+    .then(() => res.json({ success: true }))
+    .catch(() => res.status(404).json({ success: false }));
+});
 module.exports = router;

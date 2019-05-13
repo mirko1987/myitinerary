@@ -5,7 +5,7 @@ import Input from "@material-ui/core/Input";
 import InputLabel from "@material-ui/core/InputLabel";
 import { connect } from "react-redux";
 import Button from "@material-ui/core/Button";
-import { login } from "../actions/authActions";
+import { login, socialLogin } from "../actions/authActions";
 import Snackbar from "@material-ui/core/Snackbar";
 import ErrorIcon from "@material-ui/icons/Error";
 import CloseIcon from "@material-ui/icons/Close";
@@ -97,11 +97,37 @@ class Login extends Component {
 
     this.props.login(user);
   };
-  //   const responseFacebook = (response) => {
-  //     console.log(response);
-  //   };
 
   // prova
+
+  responseGoogle = response => {
+    const user = {
+      username: response.profileObj.name,
+      email: response.profileObj.email,
+      first_name: response.profileObj.givenName,
+      last_name: response.profileObj.familyName,
+      userImage: response.profileObj.imageUrl
+    };
+    this.props.socialLogin(user);
+  };
+  onFailure = error => {
+    console.log(error);
+  };
+
+  responseFacebook = response => {
+    console.log(response);
+
+    let facebookData = {
+      facebookID: response.id,
+      email: response.email,
+      password: "",
+      username: response.name,
+      first_name: "",
+      last_name: "",
+      userImage: response.picture.data.url
+    };
+    this.props.socialLogin(facebookData);
+  };
 
   render() {
     const { classes } = this.props;
@@ -200,14 +226,13 @@ class Login extends Component {
               <GoogleLogin
                 clientId="169141627109-7viqrdegtp9b9hlmc5a2qkq521o8dsl1.apps.googleusercontent.com"
                 buttonText="Login"
-                onSuccess={this.googleResponse}
+                onSuccess={this.responseGoogle}
                 onFailure={this.googleResponse}
               />
               <FacebookLogin
                 appId="624502731356721"
-                autoLoad={true}
+                callback={this.responseFacebook}
                 fields="name,email,picture"
-                callback={this.facebookResponse}
               />
             </div>
             <div />
@@ -230,13 +255,24 @@ class Login extends Component {
     );
   }
 }
+// Da controllare
+// Login.propTypes = {
+//   classes: PropTypes.object,
+//   isAuthenticated: PropTypes.bool,
+//   error: PropTypes.object.isRequired,
+//   login: PropTypes.func.isRequired,
+//   clearErrors: PropTypes.func
+// };
 
 Login.propTypes = {
-  classes: PropTypes.object,
   isAuthenticated: PropTypes.bool,
   error: PropTypes.object.isRequired,
   login: PropTypes.func.isRequired,
-  clearErrors: PropTypes.func
+  clearErrors: PropTypes.func,
+  socialLogin: PropTypes.func,
+  history: PropTypes.object,
+  auth: PropTypes.object,
+  user: PropTypes.object
 };
 
 const mapStateToProps = state => ({
@@ -246,5 +282,5 @@ const mapStateToProps = state => ({
 
 export default connect(
   mapStateToProps,
-  { login, clearErrors }
+  { login, clearErrors, socialLogin }
 )(withStyles(styles)(Login));

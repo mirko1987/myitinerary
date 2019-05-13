@@ -1,5 +1,15 @@
 import axios from "axios";
 import { returnErrors } from "./errorActions";
+// import {
+//   USER_LOADING,
+//   USER_LOADED,
+//   AUTH_ERROR,
+//   LOGIN_SUCCESS,
+//   LOGIN_FAIL,
+//   LOGOUT_SUCCESS,
+//   REGISTRATION_SUCCESS,
+//   REGISTRATION_FAIL
+// } from "./types";
 import {
   USER_LOADING,
   USER_LOADED,
@@ -8,8 +18,13 @@ import {
   LOGIN_FAIL,
   LOGOUT_SUCCESS,
   REGISTRATION_SUCCESS,
-  REGISTRATION_FAIL
+  REGISTRATION_FAIL,
+  UPDATE_USER,
+  UPDATE_USER_SUCCESS,
+  ADD_FAVOURITE,
+  DELETE_FAVOURITE
 } from "./types";
+import apiURL from "../api_urls";
 
 // Check token and load user
 export const loadUser = () => (dispatch, getState) => {
@@ -27,6 +42,31 @@ export const loadUser = () => (dispatch, getState) => {
       dispatch(returnErrors(err.response.data, err.response.status));
       dispatch({
         type: AUTH_ERROR
+      });
+    });
+};
+
+//Social Login
+
+export const socialLogin = user => dispatch => {
+  axios
+    .post(`${apiURL.auth}/social`, user)
+    .then(res =>
+      dispatch({
+        type: LOGIN_SUCCESS,
+        payload: res.data
+      })
+    )
+    .catch(err => {
+      dispatch(
+        returnErrors(
+          err.response.data,
+          err.response.status,
+          "REGISTRATION_FAIL"
+        )
+      );
+      dispatch({
+        type: LOGIN_FAIL
       });
     });
 };
@@ -115,4 +155,38 @@ export const tokenConfig = getState => {
   }
 
   return config;
+};
+
+// Favourites
+
+export const addFavourite = (favourite, userId) => (dispatch, getState) => {
+  axios
+    .put(
+      `${apiURL.users}/${userId}/favourites`,
+      favourite,
+      tokenConfig(getState)
+    )
+    .then(res =>
+      dispatch({
+        type: ADD_FAVOURITE,
+        payload: res.data
+      })
+    );
+};
+
+export const deleteFavourite = (itineraryId, userId) => (
+  dispatch,
+  getState
+) => {
+  axios
+    .delete(
+      `${apiURL.users}/${userId}/favourites/${itineraryId}`,
+      tokenConfig(getState)
+    )
+    .then(() =>
+      dispatch({
+        type: DELETE_FAVOURITE,
+        payload: itineraryId
+      })
+    );
 };

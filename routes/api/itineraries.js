@@ -20,7 +20,8 @@ router.post("/:cityId", (req, res) => {
     duration: req.body.duration,
     price: req.body.price,
     hashtag: req.body.hashtag,
-    cityName: req.body.cityName
+    cityName: req.body.cityName,
+    userImg: req.body.userImg
   });
   newItinerary.save().then(itinerary => res.send(itinerary));
 });
@@ -34,7 +35,8 @@ router.put("/:itineraryId", auth, (req, res) => {
     duration: req.body.duration,
     price: req.body.price,
     hashtag: req.body.hashtag,
-    cityName: req.body.cityName
+    cityName: req.body.cityName,
+    userImg: req.body.userImg
   };
   Itinerary.findOneAndUpdate({ _id: req.params.itineraryId }, updatedItinerary)
     .then(itinerary => res.json({ success: true }))
